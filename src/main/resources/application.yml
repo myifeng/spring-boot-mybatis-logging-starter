@@ -1,0 +1,6 @@
+logging:
+  level:
+    io:
+      github:
+        myifeng:
+          logging: debug
