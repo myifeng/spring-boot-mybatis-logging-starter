@@ -1,7 +1,5 @@
-package io.github.myifeng.mybatis.logging.process;
+package io.github.myifeng.mybatis.logging.utils;
 
-import io.github.myifeng.mybatis.logging.handler.LoggingHandler;
-import io.github.myifeng.mybatis.logging.utils.ReflectionUtil;
 import org.apache.ibatis.executor.statement.RoutingStatementHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -12,7 +10,6 @@ import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.TypeHandlerRegistry;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -20,28 +17,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 
-@Component
-public class LoggingProcess {
+public class SQLParserUtil {
 
-    final List<LoggingHandler> handlers;
-
-    public LoggingProcess(List<LoggingHandler> handlers) {
-        this.handlers = handlers;
-    }
-
-    public void process(Invocation invocation){
-        String sql = getSql(invocation);
-        if (handlers == null || handlers.size() == 0) {
-            return;
-        }
-        for(LoggingHandler handler: handlers){
-            if (handler.preHandler()) {
-                handler.postHandle(sql);
-            }
-        }
-    }
-
-    private String getSql(Invocation invocation){
+    public static String parseSql(Invocation invocation){
         if (invocation.getTarget() instanceof RoutingStatementHandler) {
             RoutingStatementHandler statementHandler = (RoutingStatementHandler) invocation.getTarget();
             StatementHandler delegate = (StatementHandler) ReflectionUtil.getFieldValue(statementHandler, "delegate");
@@ -52,11 +30,11 @@ public class LoggingProcess {
         return null;
     }
 
-    private String parseSql(BoundSql boundSql, Configuration configuration) {
+    public static String parseSql(BoundSql boundSql, Configuration configuration) {
         String sql = boundSql.getSql();
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
         Object parameterObject = boundSql.getParameterObject();
-        if (StringUtils.isEmpty(sql) || configuration == null) {
+        if (!StringUtils.hasLength(sql) || configuration == null) {
             return "";
         }
 
@@ -95,9 +73,8 @@ public class LoggingProcess {
         return sql;
     }
 
-    private String beautifySql(String sql) {
+    private static String beautifySql(String sql) {
         sql = sql.replaceAll("[\\s\n ]+", " ");
         return sql;
     }
-
 }
